@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Boyalone — Dark Assistant (PWA + AI)</title>
+  <meta name="theme-color" content="#0b0b0b">
+  <style>
+    /* Styles (dark theme) */
+    :root {
+      --bg: #070707;
+      --panel: #0f0f0f;
+      --muted: #9aa0a6;
+      --accent: #3b82f6;
+      --glass: rgba(255,255,255,0.03);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color: #e6eef8;
+      background: linear-gradient(180deg, var(--bg), #060606);
+    }
+    .app {
+      max-width: 980px;
+      margin: 28px auto;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, var(--panel), #0b0b0b);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    }
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #111827, #0b1220);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 22px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+    p.lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .panel {
+      background: var(--panel);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 6px 28px rgba(2, 6, 23, 0.6);
+    }
+    .assistant {
+      display: flex;
+      flex-direction: column;
+      height: 620px;
+    }
+    .display {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+      background: linear-gradient(180deg, var(--glass), transparent);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+    .msg {
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      max-width: 80%;
+    }
+    .msg.user {
+      margin-left: auto;
+      background: linear-gradient(90deg, var(--accent), #2563eb);
+      color: white;
+    }
+    .msg.bot {
+      background: linear-gradient(180deg, #0b1220, #09101a);
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+    .composer {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .composer input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: transparent;
+      color: inherit;
+    }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 0;
+      cursor: pointer;
+    }
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card {
+      padding: 12px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #0b0f13, #07080a);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+    .kbd {
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: #071022;
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      .assistant {
+        height: auto;
+      }
+      .display {
+        min-height: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">B</div>
+        <div>
+          <h1>Boyalone</h1>
+          <p class="lead">Dark assistant — voice, SMS, calls, location & AI chat</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button id="installBtn" class="btn ghost">Install</button>
+        <button id="micToggle" class="btn">Start Voice</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel assistant">
+        <div class="display" id="chat">
+          <!-- chat messages appear here -->
+        </div>
+
+        <div class="composer">
+          <input id="textIn" type="text" placeholder="Type a message or use voice. Try: 'call 0789123456' or 'sms 0789 Hello' or ask AI something..." />
+          <button id="sendBtn" class="btn">Send</button>
+          <button id="voiceBtn" class="btn ghost">🎤</button>
+        </div>
+      </section>
+
+      <aside class="panel controls">
+        <div class="card">
+          <strong>Quick actions</strong>
+          <div class="list" style="margin-top:8px">
+            <button class="btn ghost" id="shareLoc">Share location (SMS)</button>
+            <button class="btn ghost" id="callSample">Call sample number</button>
+            <button class="btn ghost" id="smsSample">Send sample SMS</button>
+            <button class="btn" id="clearHistory">Clear history</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>How to speak</strong>
+          <p class="lead" style="margin-top:8px;color:var(--muted)">Try commands like: <span class="kbd">call 0712345678</span>, <span class="kbd">sms 0712345678 Hello there</span>, <span class="kbd">share location</span>, <span class="kbd">show history</span>, or ask AI a question.</p>
+        </div>
+
+        <div class="card">
+          <strong>Settings</strong>
+          <p style="margin-top:8px;color:var(--muted)">Dark theme enabled — will persist across sessions.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer>Made for you — ready to deploy and run.</footer>
+  </div>
+
+  <script>
+    const backendURL = 'http://localhost:3000/chat'; // Replace with your deployed backend URL
+
+    const chat = document.getElementById('chat');
+    const textIn = document.getElementById('textIn');
+    const sendBtn = document.getElementById('sendBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const micToggle = document.getElementById('micToggle');
+
+    function appendMessage(text, who='bot') {
+      const d = document.createElement('div');
+      d.className = 'msg ' + (who === 'user' ? 'user' : 'bot');
+      d.textContent = text;
+      chat.appendChild(d);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // Load chat history from localStorage
+    const HISTORY_KEY = 'boyalone_history_v1';
+    function loadHistory() {
+      const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      chat.innerHTML = '';
+      for (const m of h) appendMessage(m.text, m.who);
+    }
+    function saveMessage(text, who) {
+      const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      h.push({ text, who, t: Date.now() });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+    }
+    document.getElementById('clearHistory').onclick = () => {
+      localStorage.removeItem(HISTORY_KEY);
+      loadHistory();
+    }
+
+    loadHistory();
+
+    // Query AI backend for response
+    async function queryAI(message) {
+      try {
+        const res = await fetch(backendURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        return data.reply || 'No reply from AI.';
+      } catch (e) {
+        return 'Error contacting AI backend.';
+      }
+    }
+
+    // Handle user input commands or AI query
+    async function handleCommand(input) {
+      input = input.trim();
+      if (!input) return;
+      appendMessage(input, 'user');
+      saveMessage(input, 'user');
+
+      const parts = input.split(/\s+/);
+      const cmd = parts[0].toLowerCase();
+
+      if (cmd === 'call' && parts[1]) {
+        const num = parts[1];
+        appendMessage('Opening phone dialer for ' + num);
+        window.location.href = 'tel:' + num;
+        return;
+      }
+
+      if (cmd === 'sms' && parts[1]) {
+        const num = parts[1];
+        const msg = parts.slice(2).join(' ') || 'Hello from Boyalone';
+        appendMessage('Composing SMS to ' + num + ': "' + msg + '"');
+        window.location.href = 'sms:' + num + '?body=' + encodeURIComponent(msg);
+        return;
+      }
+
+      if (input.toLowerCase() === 'share location' || input.toLowerCase() === 'share my location') {
+        appendMessage('Getting your location...');
+        navigator.geolocation.getCurrentPosition(pos => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lon = pos.coords.longitude.toFixed(6);
+          const locMsg = `My location: https://maps.google.com/?q=${lat},${lon}`;
+          appendMessage(locMsg);
+          saveMessage(locMsg, 'bot');
+          window.location.href = 'sms:?body=' + encodeURIComponent(locMsg);
+        }, err => {
+          appendMessage('Unable to get location: ' + (err.message || err.code));
+        }, { timeout: 10000 });
+        return;
+      }
+
+      if (input.toLowerCase() === 'show history') {
+        const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        appendMessage('History items: ' + h.length);
+        return;
+      }
+
+      // Send to AI backend
+      appendMessage('Thinking...', 'bot');
+      const reply = await queryAI(input);
+      chat.lastChild.textContent = reply;
+      saveMessage(reply, 'bot');
+      speak(reply);
+    }
+
+    sendBtn.onclick = () => { handleCommand(textIn.value); textIn.value = ''; };
+    textIn.addEventListener('keydown', e => { if (e.key === 'Enter') { handleCommand(textIn.value); textIn.value = ''; } });
+
+    // Quick action buttons
+    document.getElementById('shareLoc').onclick = () => handleCommand('share location');
+    document.getElementById('callSample').onclick = () => handleCommand('call 0712345678');
+    document.getElementById('smsSample').onclick = () => handleCommand('sms 0712345678 Hello from Boyalone');
+
+    // Speech synthesis
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      }
+    }
+
+    // Speech recognition setup
+    let recognition = null;
+    let listening = false;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (evt) => {
+        const t = evt.results[0][0].transcript;
+        handleCommand(t);
+      };
+      recognition.onerror = (e) => { appendMessage('Voice error: ' + e.error); listening = false; micToggle.textContent = 'Start Voice'; }
+      recognition.onend = () => { listening = false; micToggle.textContent = 'Start Voice'; }
+    } else {
+      micToggle.disabled = true;
+      micToggle.textContent = 'Voice N/A';
+    }
+
+    micToggle.onclick = () => {
+      if (!recognition) return;
+      if (!listening) {
+        recognition.start();
+        listening = true;
+        micToggle.textContent = 'Listening...';
+      } else {
+        recognition.stop();
+        listening = false;
+        micToggle.textContent = 'Start Voice';
+      }
+    };
+
+    voiceBtn.onclick = () => { micToggle.click(); };
+
+    // Install prompt for PWA
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBtn').style.display = 'inline-block';
+    });
+    document.getElementById('installBtn').onclick = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('installBtn').style.display = 'none';
+    };
+
+    // On load greeting
+    appendMessage('Hello! I am Boyalone — say "call <number>", "sms <number> <message>", "share location", or ask me anything.');
+    saveMessage('Hello! I am Boyalone — say "call <number>", "sms <number> <message>", "share location", or ask me anything.', 'bot');
+  </script>
+</body>
+</html>
